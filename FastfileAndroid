@@ -1,0 +1,46 @@
+default_platform(:android)
+
+platform :android do
+  desc "Runs all the tests"
+  lane :test do
+    gradle(task: "test")
+  end
+
+  desc "Submit a new Beta Build to Crashlytics Beta"
+  lane :beta do
+
+    increment_version_code(
+    )
+    value = get_version_name(
+      ext_constant_name:"versionName"
+    )
+    increment_version_name(
+        gradle_file_path: "./app/build.gradle",
+    )
+
+    store_password = "password" #prompt(text: "Signing Store Password: ", secure_text: 'J7oWKM0JtiNb27whWKGl')
+    key_password = "keypassword" #prompt(text: "Alias Key Password: ", secure_text: 'J7oWKM0JtiNb27whWKGl')
+    releaseFilePath = File.join(Dir.pwd, "..", "keystore_sign.jks")
+    gradle(task: 'clean')
+    gradle(
+      task: 'assemble',
+      build_type: 'Release',
+      print_command: false,
+      properties: {
+        "android.injected.signing.store.file" => releaseFilePath,
+        "android.injected.signing.store.password" => store_password,
+        "android.injected.signing.key.alias" => "youapp",
+        "android.injected.signing.key.password" => key_password,
+      }
+    )
+    upload_to_play_store(
+      track: 'Alpha Fastlane'
+    )
+  end
+
+  desc "Deploy a new version to the Google Play"
+  lane :deploy do
+    gradle(task: "clean assembleRelease")
+    upload_to_play_store
+  end
+end

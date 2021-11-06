@@ -1,0 +1,20 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+
+    version = get_version_number()
+    increment_version_number(version_number: version)
+    increment_version_number()
+    increment_build_number(
+      xcodeproj: "<NameProject>.xcodeproj"
+    )
+    build_app(workspace: "<NameProject>.xcworkspace", scheme: "<NameProject>")
+    upload_to_testflight
+  end
+  before_all do
+    ENV['FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD']= 'code generated in appleId site'
+    ENV['FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT']= '20000'
+  end
+end
